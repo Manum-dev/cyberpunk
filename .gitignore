@@ -1,0 +1,16 @@
+# Ignore local temporary simulation files
+developer_code.py
+
+# Python Cache
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+env_security/ 
+myenv/
+venv/
+
+# Python Cache
+**/__pycache__/ 
+*.py[cod]

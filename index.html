@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090e12">
+  <meta name="description" content="NOVA. Visioni cyberpunk, città impossibili e racconti da un futuro sospeso. Portfolio di arte digitale.">
+  <title>NOVA — Visioni da un altro domani</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header>
+    <a class="brand" href="#" aria-label="NOVA, inizio">
+      NOVA<span>®</span>
+    </a>
+
+    <span class="edition">ARTE DIGITALE / MONDI POSSIBILI</span>
+
+    <nav aria-label="Navigazione principale">
+      <a href="#opere">Opere <span>02</span></a>
+      <a href="#artista">L’artista</a>
+      <a href="#trasmissione">Trasmissione <span>03</span></a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <img
+        class="city"
+        src="assets/city.png"
+        alt="Una metropoli cyberpunk immersa nella nebbia e nelle luci al neon"
+      >
+
+      <div class="shade"></div>
+
+      <div class="coordinates" aria-hidden="true">
+        SEGNALI DAL FUTURO<br>
+        35° 41′ N / 139° 41′ E
+      </div>
+
+      <div class="airship-track">
+        <img
+          class="airship"
+          src="assets/airship.png"
+          alt="Un dirigibile futuristico fluttua sopra la città"
+        >
+      </div>
+
+      <div class="hero-copy">
+        <div class="eyebrow">
+          <i></i> PORTFOLIO / VOLUME 01
+        </div>
+
+        <h1 id="hero-title">
+          SOGNI<br>
+          AD ALTA<br>
+          <em>TENSIONE.</em>
+        </h1>
+
+        <p>
+          Tra il rumore della città e il silenzio del cielo.<br>
+          Immagino mondi in cui perdersi.
+        </p>
+
+        <a class="discover" href="#opere">
+          Esplora le opere <span>↗</span>
+        </a>
+      </div>
+
+      <div class="hero-bottom">
+        <span>ILLUSTRAZIONE · CONCEPT ART · VISIONI</span>
+
+        <button id="motion" type="button" aria-pressed="false">
+          <span class="pause-icon">Ⅱ</span> Ferma il volo
+        </button>
+
+        <span class="scroll-label">SCORRI PER ESPLORARE ↓</span>
+      </div>
+    </section>
+
+    <section class="works section" id="opere">
+      <div class="section-top">
+        <div>
+          <span class="eyebrow coral">01 / UNIVERSI VISIVI</span>
+          <h2>Altrove è qui.</h2>
+        </div>
+
+        <p>
+          Due visioni di un futuro sospeso.<br>
+          Entra, osserva, lasciati attraversare.
+        </p>
+      </div>
+
+      <div class="gallery">
+        <button
+          class="art-card"
+          data-art="city"
+          aria-label="Apri l’opera Neon District"
+        >
+          <div class="art-image city-art">
+            <img
+              src="assets/city.png"
+              alt="Grattacieli e luci neon nella città notturna"
+              loading="lazy"
+            >
+            <span class="view">Esplora ↗</span>
+            <span class="art-number">N° 001</span>
+          </div>
+
+          <div class="art-caption">
+            <h3>Neon District</h3>
+            <span>ENVIRONMENT / CONCEPT ART</span>
+          </div>
+        </button>
+
+        <button
+          class="art-card"
+          data-art="airship"
+          aria-label="Apri l’opera Silent Voyager"
+        >
+          <div class="art-image ship-art">
+            <img
+              src="assets/airship.png"
+              alt="Dirigibile scuro con motori luminosi e finestre ambrate"
+              loading="lazy"
+            >
+            <span class="view">Esplora ↗</span>
+            <span class="art-number">N° 002</span>
+          </div>
+
+          <div class="art-caption">
+            <h3>Silent Voyager</h3>
+            <span>VEHICLE / CONCEPT ART</span>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <section class="about section" id="artista">
+      <div class="eyebrow coral">02 / DIETRO LE VISIONI</div>
+
+      <div>
+        <h2>
+          Un piede nel presente.<br>
+          L’altro nel <em>possibile.</em>
+        </h2>
+
+        <p>
+          Mi affascina il punto in cui la tecnologia incontra la
+          fragilità umana. Città che non dormono, cieli abitati,
+          bagliori nel buio: il cyberpunk è il linguaggio con cui
+          esploro ciò che potremmo diventare.
+        </p>
+
+        <span class="signature">NOVA<span>✳</span></span>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <a class="brand" href="#">NOVA<span>®</span></a>
+    <span>VISIONI DA UN ALTRO DOMANI.</span>
+    <a href="#">Torna in superficie ↑</a>
+
+    <small>
+      Portfolio dimostrativo · Nome, testi e opere da personalizzare.
+      Immagini generate con AI.
+    </small>
+  </footer>
+
+  <dialog id="art-dialog">
+    <button class="close" aria-label="Chiudi l’opera">
+      Chiudi ×
+    </button>
+
+    <div class="dialog-image">
+      <img id="detail-image" alt="">
+    </div>
+
+    <div class="detail-copy">
+      <span class="eyebrow coral" id="detail-category"></span>
+      <h2 id="detail-title"></h2>
+      <p id="detail-description"></p>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
