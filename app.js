@@ -80,3 +80,56 @@ dialog.addEventListener("click", (event) => {
     dialog.close();
   }
 });
+
+// Gestione invio trasmissione al server Go
+const contactForm = document.querySelector("#contact-form");
+if (contactForm) {
+  contactForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const submitBtn = document.querySelector("#contact-submit");
+    const btnText = submitBtn.querySelector(".btn-text");
+    const btnLoading = submitBtn.querySelector(".btn-loading");
+    const feedback = document.querySelector("#contact-feedback");
+
+    const payload = {
+      name: document.querySelector("#contact-name").value.trim(),
+      email: document.querySelector("#contact-email").value.trim(),
+      message: document.querySelector("#contact-message").value.trim()
+    };
+
+    // Stato di caricamento
+    submitBtn.disabled = true;
+    btnText.style.display = "none";
+    btnLoading.style.display = "inline";
+    feedback.className = "form-feedback";
+    feedback.textContent = "";
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Errore durante la trasmissione");
+      }
+
+      feedback.className = "form-feedback success";
+      feedback.textContent = "⚡ SEGNALE RICEVUTO: " + (data.message || "Trasmissione archiviata con successo!");
+      contactForm.reset();
+    } catch (err) {
+      feedback.className = "form-feedback error";
+      feedback.textContent = "⚠️ ERRORE SEGNALE: " + err.message;
+    } finally {
+      submitBtn.disabled = false;
+      btnText.style.display = "inline";
+      btnLoading.style.display = "none";
+    }
+  });
+}

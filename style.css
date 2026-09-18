@@ -708,6 +708,122 @@ dialog::backdrop {
   .detail-copy h2 {
     font-size: 30px;
   }
+/* Sezione Contatti / Trasmissione Cyberpunk */
+
+.contact {
+  border-top: 1px solid var(--line);
+}
+
+.cyber-form {
+  max-width: 780px;
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-family: monospace;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  color: var(--muted);
+}
+
+.form-group input,
+.form-group textarea {
+  background: #0d151b;
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-family: "DM Sans", Arial, sans-serif;
+  font-size: 15px;
+  padding: 14px 18px;
+  border-radius: 0;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(255, 102, 84, 0.35);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.transmit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 32px;
+  background: var(--accent);
+  color: #050b0f;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: monospace;
+  letter-spacing: 1.2px;
+  cursor: pointer;
+  transition: background .2s, transform .1s, box-shadow .2s;
+}
+
+.transmit-btn:hover {
+  background: #ff897a;
+  box-shadow: 0 0 18px rgba(255, 102, 84, 0.5);
+}
+
+.transmit-btn:active {
+  transform: translateY(1px);
+}
+
+.transmit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-feedback {
+  font-family: monospace;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.form-feedback.success {
+  color: #38ef7d;
+  text-shadow: 0 0 8px rgba(56, 239, 125, 0.4);
+}
+
+.form-feedback.error {
+  color: #ff4757;
+  text-shadow: 0 0 8px rgba(255, 71, 87, 0.4);
+}
+
+@media (max-width: 700px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Rispetta le preferenze di accessibilità del dispositivo */
