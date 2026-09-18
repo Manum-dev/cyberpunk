@@ -19,3 +19,8 @@ venv/
 server
 *.db
 *.db-journal
+
+# Secrets & Environment Variables (mai su GitHub!)
+.env
+.env.*
+!.env.example

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"database/sql"
 	"encoding/json"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	_ "modernc.org/sqlite" // Driver SQLite in puro Go (zero dipendenze esterne)
@@ -28,15 +30,17 @@ type Message struct {
 	ID        int64     `json:"id"`
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
+	Category  string    `json:"category"`
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 // ContactRequest definisce i dati attesi dal form di contatto
 type ContactRequest struct {
-	Name    string `json:"name"`
-	Email   string `json:"email"`
-	Message string `json:"message"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Category string `json:"category"`
+	Message  string `json:"message"`
 }
 
 // Opere predefinite in memoria
@@ -73,6 +77,7 @@ func initDB(dataSourceName string) (*sql.DB, error) {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT NOT NULL,
 		email TEXT NOT NULL,
+		category TEXT DEFAULT 'SEGNALE GENERICO',
 		content TEXT NOT NULL,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);`
@@ -81,10 +86,13 @@ func initDB(dataSourceName string) (*sql.DB, error) {
 		return nil, fmt.Errorf("creazione tabella fallita: %w", err)
 	}
 
+	// Assicura che la colonna 'category' esista anche per database già creati
+	_, _ = database.Exec("ALTER TABLE messages ADD COLUMN category TEXT DEFAULT 'SEGNALE GENERICO'")
+
 	return database, nil
 }
 
-// sendDiscordNotification invia un messaggio formattato a Discord
+// sendDiscordNotification invia un messaggio formattato in stile Cyberpunk a Discord
 func sendDiscordNotification(webhookURL string, req ContactRequest) {
 	type DiscordField struct {
 		Name   string `json:"name"`
@@ -92,31 +100,60 @@ func sendDiscordNotification(webhookURL string, req ContactRequest) {
 		Inline bool   `json:"inline"`
 	}
 
+	type DiscordFooter struct {
+		Text string `json:"text"`
+	}
+
 	type DiscordEmbed struct {
 		Title     string         `json:"title"`
 		Color     int            `json:"color"`
 		Fields    []DiscordField `json:"fields"`
+		Footer    DiscordFooter  `json:"footer"`
 		Timestamp string         `json:"timestamp"`
 	}
 
 	type DiscordPayload struct {
 		Username string         `json:"username"`
+		Content  string         `json:"content,omitempty"`
 		Embeds   []DiscordEmbed `json:"embeds"`
 	}
 
+	// Colori ed emoji dinamici in base al tipo di trasmissione
+	color := 16737876 // #ff6654 Coral per generale
+	categoryEmoji := "📡"
+	pingContent := ""
+
+	switch req.Category {
+	case "COMMISSIONE ART":
+		color = 16724582 // #ff3366 Neon Magenta
+		categoryEmoji = "💎"
+		pingContent = "@here 🚨 **[PRIORITÀ ALTA]** Nuova richiesta di commissione ricevuta!"
+	case "COLLABORAZIONE":
+		color = 61695 // #00f0ff Neon Cyan
+		categoryEmoji = "🤝"
+		pingContent = "⚡ **[PROPOSTA]** Nuova collaborazione in arrivo!"
+	default:
+		req.Category = "SEGNALE GENERICO"
+	}
+
 	embed := DiscordEmbed{
-		Title: "⚡ Nuova trasmissione ricevuta da NOVA",
-		Color: 16737876, // #ff6654 colore accento cyberpunk
+		Title: fmt.Sprintf("⚡ Nuova trasmissione ricevuta da NOVA [%s]", req.Category),
+		Color: color,
 		Fields: []DiscordField{
-			{Name: "👤 Mittente / Handle", Value: req.Name, Inline: true},
-			{Name: "📡 Frequenza / Email", Value: req.Email, Inline: true},
-			{Name: "💬 Dati Trasmissione", Value: req.Message, Inline: false},
+			{Name: "👤 Mittente / Callsign", Value: fmt.Sprintf("`%s`", req.Name), Inline: true},
+			{Name: "📡 Frequenza / Contatto", Value: fmt.Sprintf("`%s`", req.Email), Inline: true},
+			{Name: fmt.Sprintf("%s Protocollo", categoryEmoji), Value: fmt.Sprintf("**%s**", req.Category), Inline: true},
+			{Name: "💬 Dati Trasmissione (Payload)", Value: req.Message, Inline: false},
+		},
+		Footer: DiscordFooter{
+			Text: "NOVA Cyberpunk Terminal • SQLite // Go Server",
 		},
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
 
 	payload := DiscordPayload{
-		Username: "NOVA Terminal",
+		Username: "NOVA Neural Uplink",
+		Content:  pingContent,
 		Embeds:   []DiscordEmbed{embed},
 	}
 
@@ -145,7 +182,35 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// loadEnv carica le variabili da un file .env locale (ignorato da git)
+func loadEnv(filename string) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return // Se .env non esiste (es. su Vercel), ignora silenziosamente
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			val := strings.Trim(strings.TrimSpace(parts[1]), "\"'")
+			if os.Getenv(key) == "" {
+				_ = os.Setenv(key, val)
+			}
+		}
+	}
+}
+
 func main() {
+	// Carica credenziali da .env locale (se presente)
+	loadEnv(".env")
+
 	// 1. Inizializzazione Database SQLite
 	var err error
 	db, err = initDB("cyberpunk.db")
@@ -185,9 +250,13 @@ func main() {
 			return
 		}
 
+		if req.Category == "" {
+			req.Category = "SEGNALE GENERICO"
+		}
+
 		// Inserimento nel database SQLite con prepared statement
-		query := "INSERT INTO messages (name, email, content) VALUES (?, ?, ?)"
-		res, err := db.Exec(query, req.Name, req.Email, req.Message)
+		query := "INSERT INTO messages (name, email, category, content) VALUES (?, ?, ?, ?)"
+		res, err := db.Exec(query, req.Name, req.Email, req.Category, req.Message)
 		if err != nil {
 			log.Printf("Errore salvataggio messaggio: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -196,18 +265,22 @@ func main() {
 		}
 
 		id, _ := res.LastInsertId()
-		log.Printf("📨 Trasmissione #%d registrata con successo da %s (%s)", id, req.Name, req.Email)
+		log.Printf("📨 Trasmissione #%d [%s] registrata da %s (%s)", id, req.Category, req.Name, req.Email)
 
 		// GOROUTINE: se DISCORD_WEBHOOK_URL è impostato, esegui l'invio in background
-		if webhookURL := os.Getenv("DISCORD_WEBHOOK_URL"); webhookURL != "" {
+		webhookURL := os.Getenv("DISCORD_WEBHOOK_URL")
+		if webhookURL != "" {
 			go sendDiscordNotification(webhookURL, req)
+		} else {
+			log.Println("⚠️ [AVVISO DISCORD] DISCORD_WEBHOOK_URL non è impostato in .env. La notifica Discord non può essere inviata.")
 		}
 
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"success": true,
-			"id":      id,
-			"message": "Segnale salvato nel database locale!",
+			"success":  true,
+			"id":       id,
+			"category": req.Category,
+			"message":  "Segnale salvato nel database locale!",
 		})
 	})
 
@@ -215,7 +288,7 @@ func main() {
 	mux.HandleFunc("GET /api/messages", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		rows, err := db.Query("SELECT id, name, email, content, created_at FROM messages ORDER BY id DESC")
+		rows, err := db.Query("SELECT id, name, email, COALESCE(category, 'SEGNALE GENERICO'), content, created_at FROM messages ORDER BY id DESC")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_ = json.NewEncoder(w).Encode(map[string]string{"error": "Errore lettura messaggi dal database"})
@@ -226,7 +299,7 @@ func main() {
 		var messages []Message
 		for rows.Next() {
 			var m Message
-			if err := rows.Scan(&m.ID, &m.Name, &m.Email, &m.Content, &m.CreatedAt); err != nil {
+			if err := rows.Scan(&m.ID, &m.Name, &m.Email, &m.Category, &m.Content, &m.CreatedAt); err != nil {
 				log.Printf("Errore scansione riga: %v", err)
 				continue
 			}
@@ -270,6 +343,11 @@ func main() {
 	log.Printf("🌐 Apri il browser su: http://localhost:%s", port)
 	log.Printf("📡 API Opere:    http://localhost:%s/api/works", port)
 	log.Printf("📨 API Messaggi: http://localhost:%s/api/messages", port)
+	if os.Getenv("DISCORD_WEBHOOK_URL") != "" {
+		log.Printf("⚡ Discord Webhook: ATTIVO (notifiche abilitate)")
+	} else {
+		log.Printf("⚠️ Discord Webhook: NON IMPOSTATO (crea .env con DISCORD_WEBHOOK_URL=...)")
+	}
 	log.Printf("═══════════════════════════════════════════════════════")
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {

@@ -84,24 +84,28 @@ dialog.addEventListener("click", (event) => {
 // Gestione invio trasmissione al server Go
 const contactForm = document.querySelector("#contact-form");
 if (contactForm) {
+  const messageInput = document.querySelector("#contact-message");
+
   contactForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const submitBtn = document.querySelector("#contact-submit");
     const btnText = submitBtn.querySelector(".btn-text");
+    const btnIcon = submitBtn.querySelector(".btn-icon");
     const btnLoading = submitBtn.querySelector(".btn-loading");
     const feedback = document.querySelector("#contact-feedback");
 
     const payload = {
       name: document.querySelector("#contact-name").value.trim(),
       email: document.querySelector("#contact-email").value.trim(),
-      message: document.querySelector("#contact-message").value.trim()
+      message: messageInput.value.trim()
     };
 
     // Stato di caricamento
     submitBtn.disabled = true;
-    btnText.style.display = "none";
-    btnLoading.style.display = "inline";
+    if (btnText) btnText.style.display = "none";
+    if (btnIcon) btnIcon.style.display = "none";
+    if (btnLoading) btnLoading.style.display = "inline";
     feedback.className = "form-feedback";
     feedback.textContent = "";
 
@@ -117,19 +121,20 @@ if (contactForm) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Errore durante la trasmissione");
+        throw new Error(data.error || "Impossibile inviare il messaggio.");
       }
 
       feedback.className = "form-feedback success";
-      feedback.textContent = "⚡ SEGNALE RICEVUTO: " + (data.message || "Trasmissione archiviata con successo!");
+      feedback.textContent = "Messaggio inviato con successo. Grazie per aver scritto!";
       contactForm.reset();
     } catch (err) {
       feedback.className = "form-feedback error";
-      feedback.textContent = "⚠️ ERRORE SEGNALE: " + err.message;
+      feedback.textContent = "Errore durante l'invio: " + err.message;
     } finally {
       submitBtn.disabled = false;
-      btnText.style.display = "inline";
-      btnLoading.style.display = "none";
+      if (btnText) btnText.style.display = "inline";
+      if (btnIcon) btnIcon.style.display = "inline";
+      if (btnLoading) btnLoading.style.display = "none";
     }
   });
 }
